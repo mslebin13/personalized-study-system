@@ -68,6 +68,11 @@ class _PGCursor:
     def fetchall(self):
         return self._cur.fetchall()
 
+    def executescript(self, script):
+        # SQLite-style multi-statement script; psycopg2 runs it in one call.
+        self._cur.execute(script)
+        return self
+
 
 class _PGConnection:
     """Wraps a psycopg2 connection so conn.execute(...) and conn.cursor()
