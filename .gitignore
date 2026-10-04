@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+venv312/
+.venv/
+env/
+
+# Local SQLite database - never commit real user data
+data/study_system.db
+
+# Environment variables / secrets - never commit real values
+.env
+
+# OS / editor junk
+.DS_Store
+.vscode/
+*.log
+
+# Build artifacts
+*.egg-info/
+dist/
+build/

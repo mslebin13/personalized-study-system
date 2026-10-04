@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Profile - Study Recommender{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Profile</h2>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ student['name'] }}</h5>
+                <p class="text-muted mb-1">{{ student['email'] }}</p>
+                <p class="text-muted small">Member since {{ student['created_at'][:10] }}</p>
+                <hr>
+                <p><strong>Total study sessions logged:</strong> {{ total_sessions }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">ML Model Status</div>
+            <div class="card-body">
+                {% if metrics %}
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between">Mean Absolute Error <span>{{ metrics.mae }}</span></li>
+                    <li class="list-group-item d-flex justify-content-between">RMSE <span>{{ metrics.rmse }}</span></li>
+                    <li class="list-group-item d-flex justify-content-between">R² Score <span>{{ metrics.r2 }}</span></li>
+                </ul>
+                {% endif %}
+                <p class="text-muted small">
+                    The model automatically retrains every {{ retrain_threshold }} new study sessions you log.
+                    <br>{{ sessions_until_retrain }} more session(s) until the next automatic retrain.
+                </p>
+                <form method="POST" action="{{ url_for('retrain') }}">
+                    <button class="btn btn-outline-primary" type="submit">
+                        <i class="fa-solid fa-brain"></i> Retrain Model Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

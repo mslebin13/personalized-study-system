@@ -1,0 +1,14 @@
+PERSONALIZED STUDY RECOMMENDATION SYSTEM - LOCALHOST
+
+1. Make sure Python 3.10 or newer is installed.
+2. Extract this ZIP completely.
+3. Open the personalized-study-system folder.
+4. Double-click: start_localhost.bat
+5. The first run may take a few minutes because Python packages are installed.
+6. Your browser will open automatically at:
+   http://127.0.0.1:5000
+
+To stop the website:
+- Close the black terminal window, or press Ctrl+C in it.
+
+If Windows shows a security warning, choose More info -> Run anyway only if you downloaded this project yourself.

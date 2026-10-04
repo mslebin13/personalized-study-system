@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Timetable - Study Recommender{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Adaptive Weekly Timetable</h2>
+    <form method="POST" action="{{ url_for('timetable_generate') }}">
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-arrows-rotate"></i> Regenerate Timetable</button>
+    </form>
+</div>
+
+{% if not entries %}
+<div class="alert alert-info">No timetable yet. Click "Regenerate Timetable" to build one from your study data and the ML model.</div>
+{% else %}
+
+{% set grouped = {} %}
+{% for e in entries %}
+    {% if grouped.update({e['entry_date']: grouped.get(e['entry_date'], []) + [e]}) %} {% endif %}
+{% endfor %}
+
+{% for date, day_entries in grouped.items() %}
+<div class="card mb-3">
+    <div class="card-header"><strong>{{ date }}</strong></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Subject</th>
+                        <th>Topic</th>
+                        <th>Duration</th>
+                        <th>Priority</th>
+                        <th>Predicted Effectiveness</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in day_entries %}
+                    <tr>
+                        <td>{{ e['start_time'] }} - {{ e['end_time'] }}</td>
+                        <td>{{ e['subject_name'] }}</td>
+                        <td>{{ e['topic_name'] }}</td>
+                        <td>{{ e['duration'] }} min</td>
+                        <td><span class="badge bg-secondary">{{ e['priority']|round(0) }}</span></td>
+                        <td><span class="badge bg-success">{{ e['predicted_effectiveness']|round(0) }}%</span></td>
+                        <td class="small text-muted">{{ e['reason'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Log Study Session - Study Recommender{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Log a Study Session</h2>
+
+{% if not subjects %}
+<div class="alert alert-warning">Add at least one subject and topic before logging a session. <a href="{{ url_for('subjects') }}">Go to Subjects →</a></div>
+{% else %}
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" id="sessionForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Subject</label>
+                            <select name="subject_id" id="subjectSelect" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Topic</label>
+                            <select name="topic_id" id="topicSelect" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="study_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Start Time</label>
+                            <input type="time" name="start_time" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Duration (minutes)</label>
+                            <input type="number" name="duration" min="5" max="300" value="60" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Difficulty Level (1-5)</label>
+                            <input type="number" name="difficulty_level" min="1" max="5" value="3" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Focus Level (1-10)</label>
+                            <input type="range" name="focus_level" min="1" max="10" value="7" class="form-range" oninput="document.getElementById('focusVal').innerText=this.value">
+                            <div class="text-muted small">Value: <span id="focusVal">7</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sleep Hours (last night)</label>
+                            <input type="number" step="0.5" name="sleep_hours" min="0" max="12" value="7" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quiz / Test Score (optional)</label>
+                            <input type="number" step="0.1" name="quiz_score" min="0" max="100" class="form-control" placeholder="e.g. 78">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes (optional)</label>
+                            <textarea name="notes" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4 w-100">
+                        <i class="fa-solid fa-floppy-disk"></i> Log Session
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">Recent Sessions</div>
+            <div class="card-body">
+                {% if recent_sessions %}
+                <ul class="list-group list-group-flush">
+                    {% for s in recent_sessions %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ s['subject_name'] }} — {{ s['topic_name'] }}</strong>
+                            <span class="badge bg-primary">{{ s['effectiveness'] or '—' }}%</span>
+                        </div>
+                        <div class="text-muted small">{{ s['study_date'] }} at {{ s['start_time'] }} • {{ s['duration'] }} min • focus {{ s['focus_level'] }}/10</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No sessions yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const subjectsData = {{ subjects_json|tojson }};
+const subjectSelect = document.getElementById('subjectSelect');
+const topicSelect = document.getElementById('topicSelect');
+
+function populateSubjects() {
+    subjectsData.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        opt.dataset.difficulty = s.difficulty_level;
+        subjectSelect.appendChild(opt);
+    });
+    populateTopics();
+}
+
+function populateTopics() {
+    topicSelect.innerHTML = '';
+    const subj = subjectsData.find(s => s.id == subjectSelect.value);
+    if (!subj) return;
+    subj.topics.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.name;
+        topicSelect.appendChild(opt);
+    });
+    const diffField = document.querySelector('input[name="difficulty_level"]');
+    if (diffField && subj.difficulty_level) diffField.value = subj.difficulty_level;
+}
+
+if (subjectSelect) {
+    subjectSelect.addEventListener('change', populateTopics);
+    populateSubjects();
+    // default date/time to now
+    const dateField = document.querySelector('input[name="study_date"]');
+    const timeField = document.querySelector('input[name="start_time"]');
+    const now = new Date();
+    if (dateField) dateField.value = now.toISOString().split('T')[0];
+    if (timeField) timeField.value = now.toTimeString().slice(0,5);
+}
+</script>
+{% endblock %}

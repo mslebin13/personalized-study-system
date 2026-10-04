@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Study Recommender{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Hi {{ current_student['name'] }} 👋</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Today's Study Time</div>
+                <div class="stat-value">{{ today_minutes }} min</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Weakest Subject</div>
+                <div class="stat-value">{{ weakest_subject or '—' }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Upcoming Exam</div>
+                <div class="stat-value">
+                    {% if upcoming_exams %}
+                        {{ upcoming_exams[0]['subject_name'] }}<br><small>{{ upcoming_exams[0]['exam_date'] }}</small>
+                    {% else %}—{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Avg Focus</div>
+                <div class="stat-value">{{ avg_focus }}/10</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Predicted Study Effectiveness (avg)</div>
+                <div class="stat-value">{{ avg_effectiveness }}%</div>
+                <div class="progress mt-2" style="height:8px;">
+                    <div class="progress-bar bg-success" style="width:{{ avg_effectiveness }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Total Study Sessions Logged</div>
+                <div class="stat-value">{{ total_sessions }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> Today's Recommended Study Sessions (ML-powered)</span>
+        <a href="{{ url_for('timetable') }}" class="btn btn-sm btn-outline-primary">View Full Timetable</a>
+    </div>
+    <div class="card-body">
+        {% if recommendations %}
+        <div class="row g-3">
+            {% for r in recommendations %}
+            <div class="col-md-6">
+                <div class="rec-card p-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ r.subject_name }} — {{ r.topic_name }}</strong>
+                        <span class="badge bg-primary">{{ r.predicted_effectiveness }}%</span>
+                    </div>
+                    <div class="text-muted small mb-1">
+                        {{ r.hour }}:00, {{ r.duration }} minutes • Priority {{ r.priority }}
+                    </div>
+                    <div class="small">{{ r.reason }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Add subjects and topics to get personalized recommendations. <a href="{{ url_for('subjects') }}">Add subjects →</a></p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">Recent Study Sessions</div>
+            <div class="card-body">
+                {% if sessions %}
+                <ul class="list-group list-group-flush">
+                    {% for s in sessions %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>{{ s['subject_name'] }} - {{ s['topic_name'] }}<br><small class="text-muted">{{ s['study_date'] }} at {{ s['start_time'] }}</small></span>
+                        <span class="badge bg-secondary align-self-center">{{ s['effectiveness'] or '—' }}%</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No sessions logged yet. <a href="{{ url_for('study_session') }}">Log your first session →</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">Upcoming Exams</div>
+            <div class="card-body">
+                {% if upcoming_exams %}
+                <ul class="list-group list-group-flush">
+                    {% for e in upcoming_exams %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        {{ e['subject_name'] }}
+                        <span class="badge bg-danger">{{ e['exam_date'] }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No exams added yet. <a href="{{ url_for('subjects') }}">Add one →</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

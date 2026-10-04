@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Analytics - Study Recommender{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Analytics & Learning Patterns</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card"><div class="card-body">
+            <div class="stat-label">Best Study Hour</div>
+            <div class="stat-value">{{ insights.best_hour or '—' }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card"><div class="card-body">
+            <div class="stat-label">Most Productive Day</div>
+            <div class="stat-value">{{ insights.best_day or '—' }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card"><div class="card-body">
+            <div class="stat-label">Avg Session Duration</div>
+            <div class="stat-value">{{ insights.avg_duration or '—' }} min</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card"><div class="card-body">
+            <div class="stat-label">Avg Focus Level</div>
+            <div class="stat-value">{{ insights.avg_focus or '—' }}/10</div>
+        </div></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">Study Hours Over Time</div>
+            <div class="card-body"><canvas id="hoursChart"></canvas></div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">Subject-wise Performance</div>
+            <div class="card-body"><canvas id="subjectChart"></canvas></div></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">Focus vs Performance</div>
+            <div class="card-body"><canvas id="focusChart"></canvas></div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">Study Effectiveness by Time of Day</div>
+            <div class="card-body"><canvas id="hourEffChart"></canvas></div></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">Topic Mastery</div>
+            <div class="card-body"><canvas id="masteryChart"></canvas></div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">ML Model Performance</div>
+            <div class="card-body">
+                {% if metrics %}
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between">MAE <span>{{ metrics.mae }}</span></li>
+                    <li class="list-group-item d-flex justify-content-between">RMSE <span>{{ metrics.rmse }}</span></li>
+                    <li class="list-group-item d-flex justify-content-between">R² Score <span>{{ metrics.r2 }}</span></li>
+                    <li class="list-group-item d-flex justify-content-between">Training Rows <span>{{ metrics.n_train }}</span></li>
+                </ul>
+                {% endif %}
+                <h6>Top Features Influencing Predictions</h6>
+                <ul class="list-group list-group-flush">
+                    {% for feature, importance in importances.items() %}
+                    {% if loop.index <= 5 %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        {{ feature }} <span class="badge bg-primary">{{ (importance*100)|round(1) }}%</span>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch("{{ url_for('chart_data') }}")
+    .then(r => r.json())
+    .then(data => {
+        new Chart(document.getElementById('hoursChart'), {
+            type: 'line',
+            data: { labels: data.study_hours_over_time.labels,
+                    datasets: [{ label: 'Hours studied', data: data.study_hours_over_time.values,
+                                 borderColor: '#4361ee', tension: 0.3 }] }
+        });
+
+        new Chart(document.getElementById('subjectChart'), {
+            type: 'bar',
+            data: { labels: data.subject_performance.labels,
+                    datasets: [{ label: 'Avg effectiveness %', data: data.subject_performance.values,
+                                 backgroundColor: '#4cc9f0' }] }
+        });
+
+        new Chart(document.getElementById('focusChart'), {
+            type: 'scatter',
+            data: { datasets: [{ label: 'Focus vs Effectiveness', data: data.focus_vs_performance,
+                                  backgroundColor: '#f72585' }] },
+            options: { scales: { x: { title: { display: true, text: 'Focus Level' } },
+                                  y: { title: { display: true, text: 'Effectiveness %' } } } }
+        });
+
+        new Chart(document.getElementById('hourEffChart'), {
+            type: 'bar',
+            data: { labels: data.effectiveness_by_hour.labels,
+                    datasets: [{ label: 'Avg effectiveness %', data: data.effectiveness_by_hour.values,
+                                 backgroundColor: '#7209b7' }] }
+        });
+
+        new Chart(document.getElementById('masteryChart'), {
+            type: 'radar',
+            data: { labels: data.topic_mastery.map(t => t.topic),
+                    datasets: [{ label: 'Mastery %', data: data.topic_mastery.map(t => t.mastery),
+                                 backgroundColor: 'rgba(67,97,238,0.2)', borderColor: '#4361ee' }] }
+        });
+    });
+</script>
+{% endblock %}

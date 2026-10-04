@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Subjects - Study Recommender{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Subjects & Topics</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+        <i class="fa-solid fa-plus"></i> Add Subject
+    </button>
+</div>
+
+{% if not subjects_with_topics %}
+<div class="alert alert-info">You haven't added any subjects yet. Click "Add Subject" to get started.</div>
+{% endif %}
+
+<div class="row g-3">
+    {% for item in subjects_with_topics %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>{{ item.subject['name'] }}</strong>
+                <span class="badge bg-secondary">Difficulty {{ item.subject['difficulty_level'] }}/5</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small">Marks: {{ item.subject['marks'] }}</span>
+                    {% if item.exam %}
+                    <span class="badge bg-danger">Exam: {{ item.exam['exam_date'] }}</span>
+                    {% endif %}
+                </div>
+                <form method="POST" class="input-group input-group-sm mb-3">
+                    <input type="hidden" name="form_type" value="update_marks">
+                    <input type="hidden" name="subject_id" value="{{ item.subject['id'] }}">
+                    <input type="number" step="0.1" name="marks" class="form-control" placeholder="Update marks" value="{{ item.subject['marks'] }}">
+                    <button class="btn btn-outline-secondary" type="submit">Update</button>
+                </form>
+
+                <h6>Topics</h6>
+                {% if item.topics %}
+                <ul class="list-group list-group-flush mb-3">
+                    {% for t in item.topics %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>{{ t['name'] }}</span>
+                            <span class="badge {% if t['mastery'] < 40 %}bg-danger{% elif t['mastery'] < 70 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                {{ t['mastery']|round(0) }}% mastery
+                            </span>
+                        </div>
+                        <form method="POST" class="d-flex align-items-center gap-2 mt-1">
+                            <input type="hidden" name="form_type" value="update_mastery">
+                            <input type="hidden" name="topic_id" value="{{ t['id'] }}">
+                            <input type="range" min="0" max="100" name="mastery" value="{{ t['mastery']|round(0)|int }}" class="form-range" onchange="this.form.submit()">
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small">No topics yet.</p>
+                {% endif %}
+
+                <form method="POST" class="input-group input-group-sm">
+                    <input type="hidden" name="form_type" value="add_topic">
+                    <input type="hidden" name="subject_id" value="{{ item.subject['id'] }}">
+                    <input type="text" name="topic_name" class="form-control" placeholder="New topic name" required>
+                    <input type="number" name="mastery" class="form-control" placeholder="Mastery %" value="30" style="max-width:110px;">
+                    <button class="btn btn-outline-primary" type="submit">Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Subject Modal -->
+<div class="modal fade" id="addSubjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="form_type" value="add_subject">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Subject</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Subject Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Difficulty Level (1-5)</label>
+                        <input type="number" name="difficulty_level" min="1" max="5" value="3" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Marks (%)</label>
+                        <input type="number" step="0.1" name="marks" min="0" max="100" value="60" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upcoming Exam Date (optional)</label>
+                        <input type="date" name="exam_date" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Add Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
